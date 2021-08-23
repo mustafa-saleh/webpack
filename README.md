@@ -46,24 +46,116 @@ By setting the mode parameter to either "development", "production" or "none", y
 
 webpack supports all browsers that are ES5-compliant (IE8 and below are not supported). webpack needs "Promise" for "import()" and "require.ensure()". If you want to support older browsers, you will need to load a polyfill before using these expressions.
 
+## Basic Setup
+
+First let's initialize npm, install webpack and webpack-cli locally
+
+```javascript
+npm init -y
+npm install webpack webpack-cli --save-dev
+```
+
+Create "src/index.js" file which contains the code to be bundled
+
+```javascript
+import _ from "lodash";
+
+function component() {
+  const element = document.createElement("div");
+  element.innerHTML = _.join(["Hello", "webpack"], " ");
+  return element;
+}
+document.body.appendChild(component());
+```
+
+As of version 4, webpack doesn't require any configuration, but most projects will need a more complex setup, which is why webpack supports a configuration file. Create a config file named "webpack.config.js" in your root project directory with the following config
+
 ```javascript
 const path = require("path");
 
 module.exports = {
-  entry: "./path/to/my/entry/file.js",
+  entry: "./src/index.js",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
   },
-  module: {
-    rules: [{ test: /\.txt$/, use: "raw-loader" }],
-  },
-  mode: "production",
+  mode: "development",
 };
 ```
 
-## Basic Setup
+create an html file "public/index.html" with a script that references the "bundle.js" as its source
+
+```html
+<body>
+  <script src="../dist/bundle.js"></script>
+</body>
+```
+
+To run webpack, execute the following command
 
 ```javascript
-
+npx webpack
 ```
+
+Open "index.html" in your browser and, if everything went right, you should see the following text: "Hello webpack".
+
+## Loading CSS
+
+In order to import a CSS file from within a JavaScript module, you need to install and add the style-loader and css-loader to your module configuration:
+
+```javascript
+npm install --save-dev style-loader css-loader
+```
+
+In webpack config file, add the following rule
+
+```javascript
+module: {
+  rules: [
+    {
+      test: /\.css$/i,
+      use: ['style-loader', 'css-loader'],
+    },
+  ],
+},
+```
+
+Module loaders can be chained, each loader in the chain applies transformations to the processed resource. Now let's add a new "src/style/style.css" file to our project and import it in our "index.js"
+
+```css
+.hello {
+  color: darkblue;
+}
+```
+
+In the component function, add a styling class to the element
+
+```javascript
+element.classList.add("hello");
+```
+
+Finally, run the build command and open up "index.html" in your browser again and you should see that "Hello webpack" has the style from css file. Webpack has loaders for pretty much any flavor of CSS you can think of – postcss, sass, and less to name a few.
+
+## Loading Images
+
+As of webpack 5, using the built-in Asset Modules we can easily incorporate images in our system. Add the following rule to the config file
+
+```javascript
+{
+  test: /\.(png|svg|jpg|jpeg|gif)$/i,
+  type: 'asset/resource',
+},
+```
+
+Add an icon "src/assets/icon.svg", import it to "index.js" file and append it to the div element in the component function
+
+```javascript
+// Add the image to our existing div.
+const myIcon = new Image();
+myIcon.src = Icon;
+element.appendChild(myIcon);
+```
+
+Let's create a new build and open up the index.html file, if all went well, you should now see your icon.
+
+The complete code for this post is hosted in a [git repository](https://github.com/mustafa-saleh/webpack). To learn more about webpack loaders, plugins code splitting, dependancy graph and much more, refer to [webpack documantation](https://webpack.js.org/guides/).
